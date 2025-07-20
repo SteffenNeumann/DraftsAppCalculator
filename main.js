@@ -3,7 +3,7 @@
 // Funktion zum Durchsuchen und Sammeln von App-Daten
 function sammleAppDaten() {
 	// Definiere das Tag wie im Beispielscript
-	const appTag = "app";
+	const appTag = "abo";
 
 	// Verwende die korrekte Drafts API-Syntax: query(content, folder, tags)
 	let appDrafts = Draft.query("", "all", [appTag]);
@@ -81,7 +81,7 @@ var appDaten = sammleAppDaten();
 
 if (appDaten.length === 0) {
 	alert(
-		"⚠️ Keine App-Daten gefunden! Erstellen Sie Drafts mit dem Tag 'app' und verwenden Sie das Template:\n\n# App Name\nPreis/Monat: 19.99\nKategorie: Streaming\nAbo seit: [[date]]\n\n> Notes"
+		"⚠️ Keine App-Daten gefunden! Erstellen Sie Drafts mit dem Tag 'abo' und verwenden Sie das Template:\n\n# App Name\nPreis/Monat: 19.99\nKategorie: Streaming\nAbo seit: [[date]]\n\n> Notes"
 	);
 	Script.complete();
 }
@@ -104,25 +104,23 @@ for (var i = 0; i < appDaten.length; i++) {
 apps.sort((a, b) => b.monatlicheKosten - a.monatlicheKosten);
 var maxKosten = Math.max(...apps.map((app) => app.monatlicheKosten));
 var skalierung = 25; // Halbiert von 50 auf 25
-var diagramm =
-	"📱 APP-KOSTEN VERGLEICH (MONATLICH)\n" + "═".repeat(60) + "\n\n";
+var diagramm = "## 📱 ABO-KOSTEN VERGLEICH\n\n";
 apps.forEach(function (app) {
 	var balkenLaenge = Math.round(
 		(app.monatlicheKosten / maxKosten) * skalierung
 	);
-	// Verwende farbige Balken (rot für Things Light Theme - Bold Text Farbe)
-	var balken = "\x1b[31m" + "█".repeat(balkenLaenge) + "\x1b[0m";
+	// Entferne ANSI-Farbcodes, da sie in Drafts nicht unterstützt werden
+	var balken = "█".repeat(balkenLaenge);
 	var appName = app.name.substring(0, 15).padEnd(15);
 	var kosten = `${app.monatlicheKosten.toFixed(2)}€`.padStart(8);
 	diagramm += `${appName} |${balken} ${kosten}\n`;
 });
 var gesamtMonatlich = apps.reduce((sum, app) => sum + app.monatlicheKosten, 0);
 var gesamtJaehrlich = gesamtMonatlich * 12;
-diagramm += "\n" + "═".repeat(60) + "\n";
-diagramm += `💰 Gesamtkosten: ${gesamtMonatlich.toFixed(
+diagramm += `\n💰 **Gesamtkosten:** ${gesamtMonatlich.toFixed(
 	2
-)}€/Monat | ${gesamtJaehrlich.toFixed(2)}€/Jahr\n`;
-diagramm += `📊 Anzahl Apps: ${apps.length} | Teuerste App: ${
+)}€/Monat • ${gesamtJaehrlich.toFixed(2)}€/Jahr\n`;
+diagramm += `📊 **${apps.length} Abos** • Teuerstes: ${
 	apps[0].name
 } (${maxKosten.toFixed(2)}€/Monat)\n\n`;
 
@@ -148,7 +146,7 @@ if (kategorien.length > 0) {
 	var gesamt = kosten.reduce((sum, k) => sum + k, 0);
 	var prozente = kosten.map((k) => (k / gesamt) * 100);
 
-	diagramm += "🥧 KATEGORIEN-ÜBERSICHT\n" + "═".repeat(60) + "\n\n";
+	diagramm += "## 🥧 KATEGORIEN-ÜBERSICHT\n\n";
 
 	var icons = ["📺", "💼", "🎮", "🎵", "☁️", "📚", "🛒", "🏃", "📱", "🎨"];
 	var sortiert = kategorien
@@ -162,20 +160,19 @@ if (kategorien.length > 0) {
 	sortiert.forEach(function (item, idx) {
 		var icon = icons[idx % icons.length];
 		var balkenLaenge = Math.round((item.prozent / 100) * 15); // Halbiert von 30 auf 15
-		// Verwende farbige Balken (rot für Things Light Theme - Bold Text Farbe)
-		var balken = "\x1b[31m" + "█".repeat(balkenLaenge) + "\x1b[0m";
+		// Entferne ANSI-Farbcodes, da sie in Drafts nicht unterstützt werden
+		var balken = "█".repeat(balkenLaenge);
 		diagramm += `${icon} ${item.name.padEnd(15)} ${item.kosten
 			.toFixed(2)
 			.padStart(8)}€ ${item.prozent.toFixed(1).padStart(6)}% |${balken}\n`;
 	});
 
-	diagramm += "\n" + "═".repeat(60) + "\n";
-	diagramm += `💰 Gesamtkosten: ${gesamt.toFixed(2)}€/Monat | ${(
+	diagramm += `\n💰 **Gesamtkosten:** ${gesamt.toFixed(2)}€/Monat • ${(
 		gesamt * 12
 	).toFixed(2)}€/Jahr\n`;
-	diagramm += `📈 Top: ${sortiert[0].name} (${sortiert[0].prozent.toFixed(
+	diagramm += `📈 **Top:** ${sortiert[0].name} (${sortiert[0].prozent.toFixed(
 		1
-	)}%) / Anzahl: ${sortiert.filter((k) => k.kosten > 0).length}`;
+	)}%) • **${sortiert.filter((k) => k.kosten > 0).length} Kategorien**`;
 }
 
 editor.setText(diagramm);
