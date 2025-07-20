@@ -107,19 +107,19 @@ var skalierung = 25;
 var gesamtMonatlich = apps.reduce((sum, app) => sum + app.monatlicheKosten, 0);
 var gesamtJaehrlich = gesamtMonatlich * 12;
 
-var diagramm = `**${apps.length} Abos**\n`;
-diagramm += `**Gesamtkosten:** ${gesamtMonatlich.toFixed(
+var diagramm = `## ABO-KOSTEN VERGLEICH\n\n`;
+diagramm += `**${apps.length} Abos,Gesamtkosten:** ${gesamtMonatlich.toFixed(
 	2
-)}€/Monat • ${gesamtJaehrlich.toFixed(2)}€/Jahr\n\n\n`;
+)}€/Monat • ${gesamtJaehrlich.toFixed(2)}€/Jahr\n\n`;
 
 apps.forEach(function (app) {
 	var balkenLaenge = Math.round(
 		(app.monatlicheKosten / maxKosten) * skalierung
 	);
 	var balken = "█".repeat(balkenLaenge);
-	var appName = `[[${app.name}]]`.padEnd(17);
+	var appName = `[[${app.name}]]`.padEnd(18);
 	var kosten = `${app.monatlicheKosten.toFixed(2)}€`;
-	diagramm += `${appName} |${balken}   ${kosten}\n`;
+	diagramm += `${appName}|${balken}   ${kosten}\n`;
 });
 
 diagramm += `\n\n`;
