@@ -3,7 +3,7 @@
 // Funktion zum Durchsuchen und Sammeln von App-Daten
 function sammleAppDaten() {
 	// Definiere das Tag wie im Beispielscript
-	const appTag = "app";
+	const appTag = "abo";
 
 	// Verwende die korrekte Drafts API-Syntax: query(content, folder, tags)
 	let appDrafts = Draft.query("", "all", [appTag]);
