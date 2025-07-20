@@ -113,9 +113,13 @@ apps.forEach(function (app) {
 	var balken = "█".repeat(balkenLaenge);
 	var appName = app.name.substring(0, 15).padEnd(15);
 	var kosten = `${app.monatlicheKosten.toFixed(2)}€`.padStart(8);
-	var info = `(${app.originalPreis}€/${
-		app.intervall == "M" ? "mon" : "jahr"
-	})`.padStart(12);
+	// Korrekte Anzeige: Monatlich → Jahrespreis, Jährlich → Originalpreis
+	var klammerPreis =
+		app.intervall == "M"
+			? (app.preis * 12).toFixed(2)
+			: app.originalPreis.toFixed(2);
+	var klammerIntervall = app.intervall == "M" ? "jahr" : "jahr";
+	var info = `(${klammerPreis}€/${klammerIntervall})`.padStart(12);
 	diagramm += `${appName} |${balken} ${kosten} ${info}\n`;
 });
 var gesamtMonatlich = apps.reduce((sum, app) => sum + app.monatlicheKosten, 0);
