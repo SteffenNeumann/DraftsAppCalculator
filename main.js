@@ -103,26 +103,26 @@ for (var i = 0; i < appDaten.length; i++) {
 // Sortierung und Diagrammaufbau
 apps.sort((a, b) => b.monatlicheKosten - a.monatlicheKosten);
 var maxKosten = Math.max(...apps.map((app) => app.monatlicheKosten));
-var skalierung = 25; // Halbiert von 50 auf 25
-var diagramm = "## ABO-KOSTEN VERGLEICH\n\n";
+var skalierung = 25;
+var gesamtMonatlich = apps.reduce((sum, app) => sum + app.monatlicheKosten, 0);
+var gesamtJaehrlich = gesamtMonatlich * 12;
+
+var diagramm = `**${apps.length} Abos**\n`;
+diagramm += `**Gesamtkosten:** ${gesamtMonatlich.toFixed(
+	2
+)}€/Monat • ${gesamtJaehrlich.toFixed(2)}€/Jahr\n\n\n`;
+
 apps.forEach(function (app) {
 	var balkenLaenge = Math.round(
 		(app.monatlicheKosten / maxKosten) * skalierung
 	);
-	// Entferne ANSI-Farbcodes, da sie in Drafts nicht unterstützt werden
 	var balken = "█".repeat(balkenLaenge);
-	var appName = `[[${app.name}]]`.substring(0, 17).padEnd(17);
+	var appName = `[[${app.name}]]`.padEnd(17);
 	var kosten = `${app.monatlicheKosten.toFixed(2)}€`;
 	diagramm += `${appName} |${balken}   ${kosten}\n`;
 });
-var gesamtMonatlich = apps.reduce((sum, app) => sum + app.monatlicheKosten, 0);
-var gesamtJaehrlich = gesamtMonatlich * 12;
-diagramm += `\n**Gesamtkosten:** ${gesamtMonatlich.toFixed(
-	2
-)}€/Monat • ${gesamtJaehrlich.toFixed(2)}€/Jahr\n`;
-diagramm += `**${apps.length} Abos** • Teuerstes: ${
-	apps[0].name
-} (${maxKosten.toFixed(2)}€/Monat)\n\n`;
+
+diagramm += `\n\n`;
 
 // ------------------ 2. Kreisdiagramm (Kategorien/Preis) --------------------
 // Gruppiere Apps nach Kategorien
