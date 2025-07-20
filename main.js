@@ -110,7 +110,8 @@ apps.forEach(function (app) {
 	var balkenLaenge = Math.round(
 		(app.monatlicheKosten / maxKosten) * skalierung
 	);
-	var balken = "█".repeat(balkenLaenge);
+	// Verwende farbige Balken (rot für Things Light Theme - Bold Text Farbe)
+	var balken = "\x1b[31m" + "█".repeat(balkenLaenge) + "\x1b[0m";
 	var appName = app.name.substring(0, 15).padEnd(15);
 	var kosten = `${app.monatlicheKosten.toFixed(2)}€`.padStart(8);
 	diagramm += `${appName} |${balken} ${kosten}\n`;
@@ -161,7 +162,8 @@ if (kategorien.length > 0) {
 	sortiert.forEach(function (item, idx) {
 		var icon = icons[idx % icons.length];
 		var balkenLaenge = Math.round((item.prozent / 100) * 15); // Halbiert von 30 auf 15
-		var balken = "█".repeat(balkenLaenge);
+		// Verwende farbige Balken (rot für Things Light Theme - Bold Text Farbe)
+		var balken = "\x1b[31m" + "█".repeat(balkenLaenge) + "\x1b[0m";
 		diagramm += `${icon} ${item.name.padEnd(15)} ${item.kosten
 			.toFixed(2)
 			.padStart(8)}€ ${item.prozent.toFixed(1).padStart(6)}% |${balken}\n`;
