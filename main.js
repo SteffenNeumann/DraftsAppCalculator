@@ -8,6 +8,11 @@ function sammleAppDaten() {
     let appDaten = [];
     
     for (let draft of appDrafts) {
+        // EXPLIZITE TAG-ÜBERPRÜFUNG: Nur Drafts mit dem Tag "app" verarbeiten
+        if (!draft.hasTag("app")) {
+            continue; // Überspringe Drafts ohne "app" Tag
+        }
+        
         let content = draft.content;
         let lines = content.split("\n");
         
@@ -56,8 +61,8 @@ function sammleAppDaten() {
             appInfo.name = draft.title.replace(/#/g, "").trim();
         }
         
-        // Füge nur Apps mit gültigen Daten hinzu
-        if (appInfo.name && appInfo.preis > 0) {
+        // DOPPELTE SICHERHEIT: Füge nur Apps mit gültigen Daten UND korrektem Tag hinzu
+        if (appInfo.name && appInfo.preis > 0 && draft.hasTag("app")) {
             appDaten.push(appInfo);
         }
     }
@@ -67,6 +72,15 @@ function sammleAppDaten() {
 
 // Sammle App-Daten
 var appDaten = sammleAppDaten();
+
+// DEBUG: Zeige gefundene Drafts an
+if (appDaten.length > 0) {
+    let debugInfo = `Gefundene Apps:\n`;
+    appDaten.forEach(app => {
+        debugInfo += `- ${app.name}: ${app.preis}€ (${app.kategorie})\n`;
+    });
+    console.log(debugInfo);
+}
 
 if (appDaten.length === 0) {
     alert("⚠️ Keine App-Daten gefunden! Erstellen Sie Drafts mit dem Tag 'app' und fügen Sie App-Informationen hinzu.\n\nBeispiel:\n# Netflix\nPreis im Monat: 19.99\nKategorie: Streaming\nAbo seit: 01.02.2000");
