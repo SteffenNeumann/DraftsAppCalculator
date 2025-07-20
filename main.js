@@ -31,26 +31,23 @@ function sammleAppDaten() {
 				appInfo.name = line.replace("#", "").trim();
 			}
 
-			// Preis-Extraktion (deutsche Formate)
+			// Preis-Extraktion für dein Template-Format: "Preis/Monat:" oder "Preis/Jahr:"
 			let preisMatch = line.match(
-				/(?:preis|kosten|price|cost).*?[:=\s]+([0-9,\.]+)[\s€]*(?:\/(m|j|monat|jahr|monthly|yearly))?/i
+				/^Preis\/(Monat|Jahr)\s*:\s*([0-9,\.]+)[\s€]*/i
 			);
 			if (preisMatch) {
-				appInfo.preis = parseFloat(preisMatch[1].replace(",", "."));
-				// Standardmäßig monatlich, außer explizit anders angegeben
-				if (
-					preisMatch[2] &&
-					(preisMatch[2].toLowerCase().startsWith("j") ||
-						preisMatch[2].toLowerCase().includes("jahr") ||
-						preisMatch[2].toLowerCase().includes("year"))
-				) {
+				appInfo.preis = parseFloat(preisMatch[2].replace(",", "."));
+				// Erkenne Intervall aus der Zeile
+				if (preisMatch[1].toLowerCase().includes("jahr")) {
 					appInfo.intervall = "J";
+				} else {
+					appInfo.intervall = "M";
 				}
 			}
 
-			// Kategorie-Extraktion (deutsche Formate)
+			// Kategorie-Extraktion für dein Template-Format: "Kategorie :"
 			let kategorieMatch = line.match(
-				/(?:kategorie|category|type|art).*?[:=\s]+(.+)/i
+				/^Kategorie\s*:\s*(.+)/i
 			);
 			if (kategorieMatch) {
 				appInfo.kategorie = kategorieMatch[1].trim();
@@ -86,7 +83,7 @@ var appDaten = sammleAppDaten();
 
 if (appDaten.length === 0) {
 	alert(
-		"⚠️ Keine App-Daten gefunden! Erstellen Sie Drafts mit dem Tag 'app' und fügen Sie App-Informationen hinzu.\n\nBeispiel:\n# Netflix\nPreis im Monat: 19.99\nKategorie: Streaming\nAbo seit: 01.02.2000"
+		"⚠️ Keine App-Daten gefunden! Erstellen Sie Drafts mit dem Tag 'app' und verwenden Sie das Template:\n\n# App Name\nPreis/Monat: 19.99\nKategorie: Streaming\nAbo seit: [[date]]\n\n> Notes"
 	);
 	Script.complete();
 }
@@ -118,15 +115,10 @@ apps.forEach(function (app) {
 	var balken = "█".repeat(balkenLaenge);
 	var appName = app.name.substring(0, 15).padEnd(15);
 	var kosten = `${app.monatlicheKosten.toFixed(2)}€`.padStart(8);
-	var info = `(${app.originalPreis}€/${app.intervall
-		.toLowerCase()
-		.substring(0, 3)})`.padStart(12);
+	var info = `(${app.originalPreis}€/${app.intervall == "M" ? "mon" : "jahr"})`.padStart(12);
 	diagramm += `${appName} |${balken} ${kosten} ${info}\n`;
 });
-var gesamtMonatlich = apps.reduce(
-	(sum, app) => sum + app.monatlicheKosten,
-	0
-);
+var gesamtMonatlich = apps.reduce((sum, app) => sum + app.monatlicheKosten, 0);
 var gesamtJaehrlich = gesamtMonatlich * 12;
 diagramm += "\n" + "═".repeat(60) + "\n";
 diagramm += `💰 Gesamtkosten: ${gesamtMonatlich.toFixed(
@@ -157,7 +149,7 @@ var kosten = Object.values(kategorienMap);
 if (kategorien.length > 0) {
 	var gesamt = kosten.reduce((sum, k) => sum + k, 0);
 	var prozente = kosten.map((k) => (k / gesamt) * 100);
-	
+
 	diagramm += "🥧 KATEGORIEN-ÜBERSICHT\n" + "═".repeat(60) + "\n\n";
 
 	var icons = ["📺", "💼", "🎮", "🎵", "☁️", "📚", "🛒", "🏃", "📱", "🎨"];
@@ -168,7 +160,7 @@ if (kategorien.length > 0) {
 			prozent: prozente[i] || 0,
 		}))
 		.sort((a, b) => b.kosten - a.kosten);
-	
+
 	sortiert.forEach(function (item, idx) {
 		var icon = icons[idx % icons.length];
 		var balkenLaenge = Math.round((item.prozent / 100) * 15); // Halbiert von 30 auf 15
@@ -177,7 +169,7 @@ if (kategorien.length > 0) {
 			.toFixed(2)
 			.padStart(8)}€ ${item.prozent.toFixed(1).padStart(6)}% |${balken}\n`;
 	});
-	
+
 	diagramm += "\n" + "═".repeat(60) + "\n";
 	diagramm += `💰 Gesamtkosten: ${gesamt.toFixed(2)}€/Monat | ${(
 		gesamt * 12
