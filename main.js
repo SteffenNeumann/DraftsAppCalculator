@@ -2,17 +2,15 @@
 
 // Funktion zum Durchsuchen und Sammeln von App-Daten
 function sammleAppDaten() {
-    // Durchsuche alle Drafts mit dem Tag "app"
-    let appDrafts = Draft.query("", "all", [], ["app"], "modified", true, false);
+    // Definiere das Tag wie im Beispielscript
+    const appTag = "app";
+    
+    // Verwende die korrekte Drafts API-Syntax: query(content, folder, tags)
+    let appDrafts = Draft.query("", "all", [appTag]);
     
     let appDaten = [];
     
     for (let draft of appDrafts) {
-        // EXPLIZITE TAG-ÜBERPRÜFUNG: Nur Drafts mit dem Tag "app" verarbeiten
-        if (!draft.hasTag("app")) {
-            continue; // Überspringe Drafts ohne "app" Tag
-        }
-        
         let content = draft.content;
         let lines = content.split("\n");
         
@@ -61,8 +59,8 @@ function sammleAppDaten() {
             appInfo.name = draft.title.replace(/#/g, "").trim();
         }
         
-        // DOPPELTE SICHERHEIT: Füge nur Apps mit gültigen Daten UND korrektem Tag hinzu
-        if (appInfo.name && appInfo.preis > 0 && draft.hasTag("app")) {
+        // Füge nur Apps mit gültigen Daten hinzu
+        if (appInfo.name && appInfo.preis > 0) {
             appDaten.push(appInfo);
         }
     }
@@ -73,14 +71,33 @@ function sammleAppDaten() {
 // Sammle App-Daten
 var appDaten = sammleAppDaten();
 
-// DEBUG: Zeige gefundene Drafts an
+// ERWEITERTE DEBUG-AUSGABE: Zeige alle Drafts und ihre Tags
+let allDrafts = Draft.query("", "all", [], [], "modified", true, false);
+let debugInfo = `=== DEBUG: ALLE DRAFTS ===\n`;
+debugInfo += `Gefundene Drafts insgesamt: ${allDrafts.length}\n\n`;
+
+for (let i = 0; i < Math.min(allDrafts.length, 10); i++) {
+    let draft = allDrafts[i];
+    let tags = draft.tags.join(", ") || "keine Tags";
+    let hasAppTag = draft.hasTag("app") ? "✅" : "❌";
+    debugInfo += `${i+1}. "${draft.title.substring(0,30)}" - Tags: [${tags}] - App-Tag: ${hasAppTag}\n`;
+}
+
+if (allDrafts.length > 10) {
+    debugInfo += `... und ${allDrafts.length - 10} weitere Drafts\n\n`;
+}
+
+debugInfo += `=== GEFUNDENE APP-DATEN ===\n`;
 if (appDaten.length > 0) {
-    let debugInfo = `Gefundene Apps:\n`;
     appDaten.forEach(app => {
         debugInfo += `- ${app.name}: ${app.preis}€ (${app.kategorie})\n`;
     });
-    console.log(debugInfo);
+} else {
+    debugInfo += "Keine App-Daten gefunden!\n";
 }
+
+console.log(debugInfo);
+alert(debugInfo);
 
 if (appDaten.length === 0) {
     alert("⚠️ Keine App-Daten gefunden! Erstellen Sie Drafts mit dem Tag 'app' und fügen Sie App-Informationen hinzu.\n\nBeispiel:\n# Netflix\nPreis im Monat: 19.99\nKategorie: Streaming\nAbo seit: 01.02.2000");
