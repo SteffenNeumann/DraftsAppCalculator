@@ -116,9 +116,9 @@ apps.forEach(function (app) {
 	// Korrekte Anzeige: Monatlich → Jahrespreis, Jährlich → Originalpreis
 	var klammerPreis =
 		app.intervall == "M"
-			? (app.preis * 12).toFixed(2)
+			? (app.originalPreis * 12).toFixed(2)
 			: app.originalPreis.toFixed(2);
-	var klammerIntervall = app.intervall == "M" ? "jahr" : "jahr";
+	var klammerIntervall = "jahr";
 	var info = `(${klammerPreis}€/${klammerIntervall})`.padStart(12);
 	diagramm += `${appName} |${balken} ${kosten} ${info}\n`;
 });
