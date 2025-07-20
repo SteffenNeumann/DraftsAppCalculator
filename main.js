@@ -33,7 +33,7 @@ function sammleAppDaten() {
 
 			// Preis-Extraktion für dein Template-Format: "Preis/Monat:" oder "Preis/Jahr:"
 			let preisMatch = line.match(
-				/^Preis\/(Monat|Jahr)\s*:\s*([0-9,\.]+)[\s€]*/i
+				/Preis\s*\/\s*(Monat|Jahr)\s*:\s*([0-9,\.]+)/i
 			);
 			if (preisMatch) {
 				appInfo.preis = parseFloat(preisMatch[2].replace(",", "."));
@@ -46,9 +46,7 @@ function sammleAppDaten() {
 			}
 
 			// Kategorie-Extraktion für dein Template-Format: "Kategorie :"
-			let kategorieMatch = line.match(
-				/^Kategorie\s*:\s*(.+)/i
-			);
+			let kategorieMatch = line.match(/^Kategorie\s*:\s*(.+)/i);
 			if (kategorieMatch) {
 				appInfo.kategorie = kategorieMatch[1].trim();
 			}
@@ -115,7 +113,9 @@ apps.forEach(function (app) {
 	var balken = "█".repeat(balkenLaenge);
 	var appName = app.name.substring(0, 15).padEnd(15);
 	var kosten = `${app.monatlicheKosten.toFixed(2)}€`.padStart(8);
-	var info = `(${app.originalPreis}€/${app.intervall == "M" ? "mon" : "jahr"})`.padStart(12);
+	var info = `(${app.originalPreis}€/${
+		app.intervall == "M" ? "mon" : "jahr"
+	})`.padStart(12);
 	diagramm += `${appName} |${balken} ${kosten} ${info}\n`;
 });
 var gesamtMonatlich = apps.reduce((sum, app) => sum + app.monatlicheKosten, 0);
