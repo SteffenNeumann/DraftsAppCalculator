@@ -26,6 +26,11 @@ function sammleAppDaten() {
 		for (let line of lines) {
 			line = line.trim();
 
+			// Überspringe Notizen (beginnen mit >)
+			if (line.startsWith(">")) {
+				continue;
+			}
+
 			// App-Name aus Titel-Zeile (beginnt mit #)
 			if (line.startsWith("#") && !appInfo.name) {
 				appInfo.name = line.replace("#", "").trim();
@@ -81,7 +86,7 @@ var appDaten = sammleAppDaten();
 
 if (appDaten.length === 0) {
 	alert(
-		"⚠️ Keine App-Daten gefunden! Erstellen Sie Drafts mit dem Tag 'abo' und verwenden Sie das Template:\n\n# App Name\nPreis/Monat: 19.99\nKategorie: Streaming\nAbo seit: [[date]]\n\n> Notes"
+		"⚠️ Keine App-Daten gefunden! Erstellen Sie Drafts mit dem Tag 'abo' und verwenden Sie das Template:\n\n# App Name\nPreis/Monat: 19.99\nPreis/Jahr: 239.88\nKategorie: Streaming\nAbo seit: [[date]]\n\n> Notes"
 	);
 	Script.complete();
 }
