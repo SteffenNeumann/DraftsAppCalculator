@@ -20,40 +20,56 @@ function sammleAppDaten() {
 			intervall: "M",
 			kategorie: "Sonstiges",
 			monatlicheWerte: [], // Für Verlaufsdiagramme
+			zusatzPreise: [], // Sammle alle gefundenen Preise
 		};
 
 		// Extrahiere App-Informationen aus dem Draft-Inhalt
+		let inCodeBlock = false;
+
 		for (let line of lines) {
 			line = line.trim();
 
-			// Überspringe Notizen (beginnen mit >)
-			if (line.startsWith(">")) {
+			// Prüfe auf Markdown-Codeblock Start/Ende
+			if (line.startsWith("```")) {
+				inCodeBlock = !inCodeBlock;
 				continue;
 			}
 
-			// App-Name aus Titel-Zeile (beginnt mit #)
-			if (line.startsWith("#") && !appInfo.name) {
+			// App-Name aus Titel-Zeile (beginnt mit #) - nur außerhalb von Codeblöcken
+			if (!inCodeBlock && line.startsWith("#") && !appInfo.name) {
 				appInfo.name = line.replace("#", "").trim();
 			}
 
 			// Preis-Extraktion für dein Template-Format: "Preis/Monat:" oder "Preis/Jahr:"
+			// Sammle ALLE Preise (auch aus Notizen und Codeblöcken)
 			let preisMatch = line.match(
 				/Preis\s*\/\s*(Monat|Jahr)\s*:\s*([0-9,\.]+)/i
 			);
 			if (preisMatch) {
-				appInfo.preis = parseFloat(preisMatch[2].replace(",", "."));
-				// Erkenne Intervall aus der Zeile
-				if (preisMatch[1].toLowerCase().includes("jahr")) {
-					appInfo.intervall = "J";
+				let gefundenerPreis = parseFloat(preisMatch[2].replace(",", "."));
+				let gefundenerIntervall = preisMatch[1].toLowerCase().includes("jahr")
+					? "J"
+					: "M";
+
+				// Hauptpreis setzen (erster gefundener Preis außerhalb von Codeblöcken)
+				if (!inCodeBlock && appInfo.preis === 0) {
+					appInfo.preis = gefundenerPreis;
+					appInfo.intervall = gefundenerIntervall;
 				} else {
-					appInfo.intervall = "M";
+					// Zusätzliche Preise sammeln
+					appInfo.zusatzPreise.push({
+						preis: gefundenerPreis,
+						intervall: gefundenerIntervall,
+					});
 				}
 			}
 
-			// Kategorie-Extraktion für dein Template-Format: "Kategorie :"
-			let kategorieMatch = line.match(/^Kategorie\s*:\s*(.+)/i);
-			if (kategorieMatch) {
-				appInfo.kategorie = kategorieMatch[1].trim();
+			// Kategorie-Extraktion für dein Template-Format: "Kategorie :" - nur außerhalb von Codeblöcken
+			if (!inCodeBlock) {
+				let kategorieMatch = line.match(/^Kategorie\s*:\s*(.+)/i);
+				if (kategorieMatch) {
+					appInfo.kategorie = kategorieMatch[1].trim();
+				}
 			}
 
 			// Monatliche Werte für Verlaufsdiagramme
@@ -70,6 +86,28 @@ function sammleAppDaten() {
 		// Verwende Draft-Titel als App-Name falls nicht gefunden
 		if (!appInfo.name) {
 			appInfo.name = draft.title.replace(/#/g, "").trim();
+		}
+
+		// Summiere alle Preise (Hauptpreis + Zusatzpreise)
+		if (appInfo.zusatzPreise.length > 0) {
+			let gesamtpreis = appInfo.preis;
+
+			// Konvertiere Hauptpreis zu jährlich für einheitliche Berechnung
+			let hauptpreisJaehrlich =
+				appInfo.intervall === "J" ? appInfo.preis : appInfo.preis * 12;
+
+			// Addiere alle Zusatzpreise (konvertiert zu jährlich)
+			for (let zusatz of appInfo.zusatzPreise) {
+				let zusatzJaehrlich =
+					zusatz.intervall === "J" ? zusatz.preis : zusatz.preis * 12;
+				hauptpreisJaehrlich += zusatzJaehrlich;
+			}
+
+			// Setze Gesamtpreis zurück (basierend auf ursprünglichem Intervall)
+			appInfo.preis =
+				appInfo.intervall === "J"
+					? hauptpreisJaehrlich
+					: hauptpreisJaehrlich / 12;
 		}
 
 		// Füge nur Apps mit gültigen Daten hinzu
