@@ -159,7 +159,7 @@ apps.forEach(function (app) {
 	var balkenLaenge = Math.round(
 		(app.monatlicheKosten / maxKosten) * skalierung
 	);
-	var balken = "🟢".repeat(balkenLaenge);
+	var balken = "▓".repeat(balkenLaenge);
 	var appName = `[[${app.name}]]`.padEnd(18);
 	var kosten = `${app.monatlicheKosten.toFixed(2)}€`;
 	diagramm += `${appName}|${balken}   ${kosten}\n`;
@@ -204,7 +204,7 @@ if (kategorien.length > 0) {
 		var icon = icons[idx % icons.length];
 		var balkenLaenge = Math.round((item.prozent / 100) * 6); // Angepasst für kürzere Balken
 		// Entferne ANSI-Farbcodes, da sie in Drafts nicht unterstützt werden
-		var balken = "🟠".repeat(balkenLaenge);
+		var balken = "▒".repeat(balkenLaenge);
 		var kategorieName = item.name.padEnd(18);
 		var kategorieKosten = `${item.kosten.toFixed(2)}€`.padStart(8);
 		var kategorieProzent = `${item.prozent.toFixed(1)}%`.padStart(6);
@@ -312,7 +312,7 @@ function erstelleMonatlicheKostenvisualisierung() {
 		var balkenLaenge = Math.round(
 			(gesamtKostenImMonat / (maxMonatlicheKosten * 3)) * skalierungZeit
 		);
-		var balken = "🟢".repeat(Math.max(1, balkenLaenge));
+		var balken = "█".repeat(Math.max(1, balkenLaenge));
 
 		var anzeige =
 			jaehrlicheKostenImMonat > 0
@@ -335,7 +335,7 @@ function erstelleMonatlicheKostenvisualisierung() {
 			var app = monatlicheAbos[i];
 			var anteil = (app.kosten / gesamtMonatlicheAbos) * 100;
 			var balkenLaenge = Math.round((anteil / 100) * 8);
-			var balken = "🟢".repeat(Math.max(1, balkenLaenge));
+			var balken = "▓".repeat(Math.max(1, balkenLaenge));
 			kostenVisualisierung += `  ${app.name.padEnd(15)} ${app.kosten.toFixed(
 				2
 			)}€ |${balken} ${anteil.toFixed(1)}%\n`;
@@ -351,7 +351,7 @@ function erstelleMonatlicheKostenvisualisierung() {
 			var app = jaehrlicheAbos[i];
 			var anteil = (app.monatlicheKosten / gesamtJaehrlichMonatlich) * 100;
 			var balkenLaenge = Math.round((anteil / 100) * 8);
-			var balken = "🟠".repeat(Math.max(1, balkenLaenge));
+			var balken = "▒".repeat(Math.max(1, balkenLaenge));
 			kostenVisualisierung += `  ${app.name.padEnd(15)} ${app.kosten.toFixed(
 				2
 			)}€/Jahr (${app.monatlicheKosten.toFixed(
