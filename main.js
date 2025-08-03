@@ -159,7 +159,7 @@ apps.forEach(function (app) {
 	var balkenLaenge = Math.round(
 		(app.monatlicheKosten / maxKosten) * skalierung
 	);
-	var balken = "█".repeat(balkenLaenge);
+	var balken = "🟢".repeat(balkenLaenge);
 	var appName = `[[${app.name}]]`.padEnd(18);
 	var kosten = `${app.monatlicheKosten.toFixed(2)}€`;
 	diagramm += `${appName}|${balken}   ${kosten}\n`;
@@ -204,7 +204,7 @@ if (kategorien.length > 0) {
 		var icon = icons[idx % icons.length];
 		var balkenLaenge = Math.round((item.prozent / 100) * 6); // Angepasst für kürzere Balken
 		// Entferne ANSI-Farbcodes, da sie in Drafts nicht unterstützt werden
-		var balken = "█".repeat(balkenLaenge);
+		var balken = "🟠".repeat(balkenLaenge);
 		var kategorieName = item.name.padEnd(18);
 		var kategorieKosten = `${item.kosten.toFixed(2)}€`.padStart(8);
 		var kategorieProzent = `${item.prozent.toFixed(1)}%`.padStart(6);
@@ -213,5 +213,158 @@ if (kategorien.length > 0) {
 
 	diagramm += `\n`;
 }
+
+// ------------------ 3. Monatliche Kostenentwicklung --------------------
+function erstelleMonatlicheKostenvisualisierung() {
+	var kostenVisualisierung = "## 📈 MONATLICHE KOSTENENTWICKLUNG\n\n";
+
+	// Gruppiere Abos nach Abrechnungsintervall
+	var monatlicheAbos = [];
+	var jaehrlicheAbos = [];
+
+	for (var i = 0; i < appDaten.length; i++) {
+		var app = appDaten[i];
+		var monatlicheKosten = app.intervall == "M" ? app.preis : app.preis / 12;
+
+		if (app.intervall == "M") {
+			monatlicheAbos.push({
+				name: app.name,
+				kosten: app.preis,
+				kategorie: app.kategorie,
+			});
+		} else {
+			jaehrlicheAbos.push({
+				name: app.name,
+				kosten: app.preis,
+				monatlicheKosten: monatlicheKosten,
+				kategorie: app.kategorie,
+			});
+		}
+	}
+
+	// Berechne Gesamtkosten
+	var gesamtMonatlicheAbos = monatlicheAbos.reduce(
+		(sum, app) => sum + app.kosten,
+		0
+	);
+	var gesamtJaehrlicheAbos = jaehrlicheAbos.reduce(
+		(sum, app) => sum + app.kosten,
+		0
+	);
+	var gesamtJaehrlichMonatlich = jaehrlicheAbos.reduce(
+		(sum, app) => sum + app.monatlicheKosten,
+		0
+	);
+	var gesamtAlleMonatlich = gesamtMonatlicheAbos + gesamtJaehrlichMonatlich;
+
+	// Übersicht der Abrechnungsarten
+	kostenVisualisierung += `**Abrechnungsübersicht:**\n`;
+	kostenVisualisierung += `🔄 Monatliche Abos: ${
+		monatlicheAbos.length
+	} Apps • ${gesamtMonatlicheAbos.toFixed(2)}€/Monat\n`;
+	kostenVisualisierung += `📅 Jährliche Abos: ${
+		jaehrlicheAbos.length
+	} Apps • ${gesamtJaehrlicheAbos.toFixed(
+		2
+	)}€/Jahr (${gesamtJaehrlichMonatlich.toFixed(2)}€/Monat)\n`;
+	kostenVisualisierung += `💰 **Gesamt: ${gesamtAlleMonatlich.toFixed(
+		2
+	)}€/Monat • ${(gesamtAlleMonatlich * 12).toFixed(2)}€/Jahr**\n\n`;
+
+	// Erstelle 12-Monats-Verlauf
+	kostenVisualisierung += `**12-Monats-Kostenverlauf:**\n`;
+	var maxMonatlicheKosten = gesamtAlleMonatlich;
+	var skalierungZeit = 20;
+
+	// Simuliere monatliche Schwankungen (jährliche Abos werden in bestimmten Monaten fällig)
+	var monate = [
+		"Jan",
+		"Feb",
+		"Mär",
+		"Apr",
+		"Mai",
+		"Jun",
+		"Jul",
+		"Aug",
+		"Sep",
+		"Okt",
+		"Nov",
+		"Dez",
+	];
+
+	for (var monat = 0; monat < 12; monat++) {
+		var monatlicheKostenTotal = gesamtMonatlicheAbos; // Immer anfallende monatliche Kosten
+		var jaehrlicheKostenImMonat = 0;
+
+		// Simuliere: Jährliche Abos werden gleichmäßig über das Jahr verteilt fällig
+		// (In der Realität würdest du hier echte Fälligkeitsdaten verwenden)
+		for (var j = 0; j < jaehrlicheAbos.length; j++) {
+			// Verteile jährliche Zahlungen gleichmäßig über die Monate (vereinfacht)
+			if (
+				monat % Math.ceil(12 / jaehrlicheAbos.length) ===
+				j % Math.ceil(12 / jaehrlicheAbos.length)
+			) {
+				jaehrlicheKostenImMonat += jaehrlicheAbos[j].kosten;
+			}
+		}
+
+		var gesamtKostenImMonat = monatlicheKostenTotal + jaehrlicheKostenImMonat;
+		var balkenLaenge = Math.round(
+			(gesamtKostenImMonat / (maxMonatlicheKosten * 3)) * skalierungZeit
+		);
+		var balken = "🟢".repeat(Math.max(1, balkenLaenge));
+
+		var anzeige =
+			jaehrlicheKostenImMonat > 0
+				? `${gesamtKostenImMonat.toFixed(0)}€ (${monatlicheKostenTotal.toFixed(
+						0
+				  )}€ + ${jaehrlicheKostenImMonat.toFixed(0)}€ jährl.)`
+				: `${gesamtKostenImMonat.toFixed(0)}€`;
+
+		kostenVisualisierung += `${monate[monat]} |${balken}  ${anzeige}\n`;
+	}
+
+	kostenVisualisierung += `\n`;
+
+	// Aufschlüsselung nach Abrechnungsart
+	if (monatlicheAbos.length > 0) {
+		kostenVisualisierung += `**🔄 Monatliche Abos (${monatlicheAbos.length}):**\n`;
+		monatlicheAbos.sort((a, b) => b.kosten - a.kosten);
+
+		for (var i = 0; i < monatlicheAbos.length; i++) {
+			var app = monatlicheAbos[i];
+			var anteil = (app.kosten / gesamtMonatlicheAbos) * 100;
+			var balkenLaenge = Math.round((anteil / 100) * 8);
+			var balken = "🟢".repeat(Math.max(1, balkenLaenge));
+			kostenVisualisierung += `  ${app.name.padEnd(15)} ${app.kosten.toFixed(
+				2
+			)}€ |${balken} ${anteil.toFixed(1)}%\n`;
+		}
+		kostenVisualisierung += `\n`;
+	}
+
+	if (jaehrlicheAbos.length > 0) {
+		kostenVisualisierung += `**📅 Jährliche Abos (${jaehrlicheAbos.length}):**\n`;
+		jaehrlicheAbos.sort((a, b) => b.kosten - a.kosten);
+
+		for (var i = 0; i < jaehrlicheAbos.length; i++) {
+			var app = jaehrlicheAbos[i];
+			var anteil = (app.monatlicheKosten / gesamtJaehrlichMonatlich) * 100;
+			var balkenLaenge = Math.round((anteil / 100) * 8);
+			var balken = "🟠".repeat(Math.max(1, balkenLaenge));
+			kostenVisualisierung += `  ${app.name.padEnd(15)} ${app.kosten.toFixed(
+				2
+			)}€/Jahr (${app.monatlicheKosten.toFixed(
+				2
+			)}€/Monat) |${balken} ${anteil.toFixed(1)}%\n`;
+		}
+		kostenVisualisierung += `\n`;
+	}
+
+	return kostenVisualisierung;
+}
+
+// Füge die monatliche Kostenvisualisierung hinzu
+diagramm += erstelleMonatlicheKostenvisualisierung();
 
 editor.setText(diagramm);
